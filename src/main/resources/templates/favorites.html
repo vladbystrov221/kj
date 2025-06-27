@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранные книги - Каталог книг</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f7f0;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2e8b57 0%, #3cb371 100%) !important;
+            box-shadow: 0 2px 8px rgba(0,128,0,0.2);
+        }
+        .book-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,128,0,0.1);
+            height: 100%;
+        }
+        .book-card:hover {
+            transform: translateY(-3px);
+        }
+        .book-image {
+            height: 160px;
+            background: linear-gradient(135deg, #2e8b57 0%, #3cb371 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+        .footer {
+            background: #2e8b57;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #2e8b57 0%, #3cb371 100%);
+            border: none;
+        }
+        .btn-success:hover {
+            background: #2e8b57;
+        }
+        .badge {
+            background-color: #2e8b57 !important;
+        }
+        .favorite-btn {
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .favorite-btn:hover {
+            color: #ff3333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-book-open me-2"></i>Книги
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link active" href="/favorites">
+                            <i class="fas fa-heart me-1"></i>Избранное
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin">
+                            <i class="fas fa-cog me-1"></i>Управление
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form method="post" action="/logout" class="d-inline">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit" class="btn nav-link border-0 bg-transparent">
+                                <i class="fas fa-sign-out-alt me-1"></i>Выход
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Заголовок -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-heart text-danger me-2"></i>Избранные книги</h2>
+            <a href="/" class="btn btn-outline-success">
+                <i class="fas fa-arrow-left me-1"></i>Вернуться в каталог
+            </a>
+        </div>
+    </div>
+
+    <!-- Сообщения -->
+    <div class="container">
+        <div class="alert alert-success alert-dismissible fade show py-2 small" th:if="${message != null}">
+            <i class="fas fa-check-circle me-1"></i>
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div class="alert alert-danger alert-dismissible fade show py-2 small" th:if="${error != null}">
+            <i class="fas fa-exclamation-circle me-1"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- Избранные книги -->
+    <div class="container">
+        <!-- Книги найдены -->
+        <div class="row g-4" th:if="${favorites != null and not #lists.isEmpty(favorites)}">
+            <div class="col-sm-6 col-md-4 col-lg-3" th:each="favorite : ${favorites}">
+                <div class="card book-card h-100">
+                    <div class="book-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">
+                            <a th:href="@{/books/{id}(id=${favorite.book.id})}" class="text-decoration-none text-dark" th:text="${favorite.book.title}">Название книги</a>
+                        </h6>
+                        <p class="card-text text-muted mb-2 small" th:text="${favorite.book.author}">Автор</p>
+                        <p class="card-text small" th:if="${favorite.book.description}" 
+                           th:text="${#strings.length(favorite.book.description) > 80 ? #strings.substring(favorite.book.description, 0, 80) + '...' : favorite.book.description}">
+                            Описание...
+                        </p>
+                        <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+                            <a th:href="@{/books/{id}(id=${favorite.book.id})}" class="btn btn-sm btn-outline-success">Подробнее</a>
+                            <form th:action="@{/favorites/toggle}" method="post" class="d-inline">
+                                <input type="hidden" name="bookId" th:value="${favorite.book.id}" />
+                                <input type="hidden" name="returnUrl" value="/favorites" />
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-sm btn-link p-0 favorite-btn">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нет избранных книг -->
+        <div class="text-center py-5" th:if="${favorites == null or #lists.isEmpty(favorites)}">
+            <i class="far fa-heart text-muted mb-3" style="font-size: 4rem;"></i>
+            <h4 class="text-muted">У вас пока нет избранных книг</h4>
+            <p class="text-muted">Добавьте книги в избранное, чтобы они отображались здесь</p>
+            <a href="/" class="btn btn-success mt-3">
+                <i class="fas fa-search me-1"></i>Перейти в каталог
+            </a>
+        </div>
+    </div>
+
+    <!-- Футер -->
+    <footer class="footer text-white text-center">
+        <div class="container">
+            <p class="mb-0 small">&copy; 2024 Каталог книг</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

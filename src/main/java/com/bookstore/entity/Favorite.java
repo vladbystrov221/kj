@@ -1,16 +1,17 @@
 package com.bookstore.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "favorites", 
        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "book_id"}))
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Favorite {
     
@@ -26,7 +27,6 @@ public class Favorite {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
     
-    @CreationTimestamp
     @Column(name = "added_at", nullable = false, updatable = false)
     private LocalDateTime addedAt = LocalDateTime.now();
     
